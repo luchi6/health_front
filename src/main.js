@@ -19,7 +19,7 @@ axios.interceptors.request.use(config => {
   return config;
 }, 
 function (error) {
-  // 对请求错误做些什么
+  // 对请求错误做些什么  hehe 测试
   return Promise.reject(error);
 }
 

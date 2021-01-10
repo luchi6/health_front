@@ -16,16 +16,36 @@
                         <el-button type="primary" class="butT" @click="handleCreate">新建</el-button>
                     </div>
                     <el-table size="small" current-row-key="id" :data="dataList" stripe highlight-current-row>
-                        <el-table-column type="index" align="center" label="序号"></el-table-column>
-                        <el-table-column prop="code" label="项目编码" align="center"></el-table-column>
-                        <el-table-column prop="name" label="项目名称" align="center"></el-table-column>
+                        <el-table-column type="index" align="center" label="序号">
+                            <template slot-scope="scope">
+                                <span style="margin-left: 10px">{{scope.row.id}}</span>
+                             </template>
+                        </el-table-column>
+                        <el-table-column prop="code" label="项目编码" align="center">
+                            <template slot-scope="scope">
+                                <span style="margin-left: 10px">{{ scope.row.code }}</span>
+                             </template>
+                        </el-table-column>
+                        <el-table-column prop="name" label="项目名称" align="center">
+                            <template slot-scope="scope">
+                                <span style="margin-left: 10px">{{ scope.row.name }}</span>
+                             </template>
+                        </el-table-column>
                         <el-table-column label="适用性别" align="center">
                             <template slot-scope="scope">
                                 <span>{{ scope.row.sex == '0' ? '不限' : scope.row.sex == '1' ? '男' : '女'}}</span>
                             </template>
                         </el-table-column>
-                        <el-table-column prop="age" label="适用年龄" align="center"></el-table-column>
-                        <el-table-column prop="remark" label="项目说明" align="center"></el-table-column>
+                        <el-table-column prop="age" label="适用年龄" align="center">
+                            <template slot-scope="scope">
+                                <span style="margin-left: 10px">{{ scope.row.age }}</span>
+                             </template>
+                        </el-table-column>
+                        <el-table-column prop="remark" label="项目说明" align="center">
+                            <template slot-scope="scope">
+                                <span style="margin-left: 10px">{{ scope.row.remark }}</span>
+                             </template>
+                        </el-table-column>
                         <el-table-column label="操作" align="center">
                             <template slot-scope="scope">
                                 <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
@@ -107,7 +127,7 @@
                             </el-form>
                             <div slot="footer" class="dialog-footer">
                                 <el-button @click="dialogFormVisible = false">取消</el-button>
-                                <el-button type="primary" @click="handleAdd">确定</el-button>
+                                <el-button type="primary" @click="handleAdd(dataAddForm)">确定</el-button>
                             </div>
                         </el-dialog>
                     </div>
@@ -176,7 +196,7 @@
                             </el-form>
                             <div slot="footer" class="dialog-footer">
                                 <el-button @click="dialogFormVisible4Edit = false">取消</el-button>
-                                <el-button type="primary" @click="handleEdit">确定</el-button>
+                                <el-button type="primary" @click="handleEdit(dataEditForm)">确定</el-button>
                             </div>
                         </el-dialog>
                     </div>
@@ -217,26 +237,73 @@ export default {
   },
     //钩子函数，VUE对象初始化完成后自动执行
             created() {
-                // var token =  this.$store.state.userInfo.token
-                // if(token!=null){
-                    this.findPage()
-                // }else{
-                // this.$router.replace({ name: "login" });
-                // }
-               
-        
-            
+                this.findPage();
             },
-            methods:{            
-                        findPage(){
-                            this.$http.get("api/checkitem/findAll").then((res)=>{
-                                 if(res.data.flag){
-                                     alert(JSON.stringify(res.data.data))
-                                 }else{
-                                     this.$message.error(res.data.message)
-                                 }
-                            })
+            methods:{       
+                
+                handleCurrentChange(curpage){
+                    this.pagination.currentPage=curpage;
+                    this.findPage();
+                },
+                findPage(){
+                    this.$http.post("api/checkitem/findPage",this.pagination).then((res)=>{
+                            if(res.data.flag){
+                            //  alert(JSON.stringify(res.data.data))
+                                this.dataList=res.data.data.rows;
+                                this.pagination.total=res.data.data.total;
+                            }else{
+                                this.$message.error(res.data.message)
+                            }
+                    })
+                },
+                findPageByCondition(){
+                    this.pagination.currentPage=1;
+                    this.findPage();
+                },
+                //重置表单
+                resetForm(){
+                    this.formData={};
+                },
+                //添加弹窗显示
+                handleCreate(){
+                    this.formData={};
+                    this.dialogFormVisible=true;
+                },
+                //添加
+                handleAdd(dataAddForm){
+                    //校验表单输入项是否合法
+                    this.$refs['dataAddForm'].validate((valid)=>{
+                        if(valid){
+                            // alert(valid);
+                            this.$http.post("api/checkitem/save").then((res)=>{
+                                this.dialogFormVisible=true;
+                                if(res.data.flag){
+                                    this.findPage();
+                                    //新增成功，提示成功信息  
+                                    this.$message.success("新增成功");
+                                }else{
+                                    this.$message.error("新增失败")
+                                }
+                    })
+                        }else{
+                            this.$message.error({
+                                type: error,
+                                message:"表单数据校验失败"
+                            });
                         }
+                    })
+                },
+                //点击编辑按钮
+                handleUpdate(row){
+                    this.dialogFormVisible4Edit=true;
+                    let str=JSON.stringify(row);
+                    this.formData=JSON.parse(str);
+                },
+                //编辑，提交表单
+                handleEdit(ruleForm){
+                    this.handleAdd(ruleForm);
+                },
+
             }
   
 };

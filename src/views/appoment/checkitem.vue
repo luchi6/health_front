@@ -16,36 +16,16 @@
                         <el-button type="primary" class="butT" @click="handleCreate">新建</el-button>
                     </div>
                     <el-table size="small" current-row-key="id" :data="dataList" stripe highlight-current-row>
-                        <el-table-column type="index" align="center" label="序号">
-                            <template slot-scope="scope">
-                                <span style="margin-left: 10px">{{scope.row.id}}</span>
-                             </template>
-                        </el-table-column>
-                        <el-table-column prop="code" label="项目编码" align="center">
-                            <template slot-scope="scope">
-                                <span style="margin-left: 10px">{{ scope.row.code }}</span>
-                             </template>
-                        </el-table-column>
-                        <el-table-column prop="name" label="项目名称" align="center">
-                            <template slot-scope="scope">
-                                <span style="margin-left: 10px">{{ scope.row.name }}</span>
-                             </template>
-                        </el-table-column>
+                        <el-table-column type="index" align="center" label="序号"></el-table-column>
+                        <el-table-column prop="code" label="项目编码" align="center"></el-table-column>
+                        <el-table-column prop="name" label="项目名称" align="center"></el-table-column>
                         <el-table-column label="适用性别" align="center">
                             <template slot-scope="scope">
                                 <span>{{ scope.row.sex == '0' ? '不限' : scope.row.sex == '1' ? '男' : '女'}}</span>
                             </template>
                         </el-table-column>
-                        <el-table-column prop="age" label="适用年龄" align="center">
-                            <template slot-scope="scope">
-                                <span style="margin-left: 10px">{{ scope.row.age }}</span>
-                             </template>
-                        </el-table-column>
-                        <el-table-column prop="remark" label="项目说明" align="center">
-                            <template slot-scope="scope">
-                                <span style="margin-left: 10px">{{ scope.row.remark }}</span>
-                             </template>
-                        </el-table-column>
+                        <el-table-column prop="age" label="适用年龄" align="center"></el-table-column>
+                        <el-table-column prop="remark" label="项目说明" align="center"></el-table-column>
                         <el-table-column label="操作" align="center">
                             <template slot-scope="scope">
                                 <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
@@ -127,7 +107,7 @@
                             </el-form>
                             <div slot="footer" class="dialog-footer">
                                 <el-button @click="dialogFormVisible = false">取消</el-button>
-                                <el-button type="primary" @click="handleAdd(dataAddForm)">确定</el-button>
+                                <el-button type="primary" @click="handleAdd('dataAddForm')">确定</el-button>
                             </div>
                         </el-dialog>
                     </div>
@@ -196,7 +176,7 @@
                             </el-form>
                             <div slot="footer" class="dialog-footer">
                                 <el-button @click="dialogFormVisible4Edit = false">取消</el-button>
-                                <el-button type="primary" @click="handleEdit(dataEditForm)">确定</el-button>
+                                <el-button type="primary" @click="handleEdit('dataEditForm')">确定</el-button>
                             </div>
                         </el-dialog>
                     </div>
@@ -272,19 +252,22 @@ export default {
                 //添加
                 handleAdd(dataAddForm){
                     //校验表单输入项是否合法
-                    this.$refs['dataAddForm'].validate((valid)=>{
+                    this.$refs[dataAddForm].validate((valid)=>{
                         if(valid){
                             // alert(valid);
-                            this.$http.post("api/checkitem/save").then((res)=>{
-                                this.dialogFormVisible=true;
+                            this.$http.post("api/checkitem/saveOrUpdate",this.formData).then((res)=>{
+                                
                                 if(res.data.flag){
                                     this.findPage();
                                     //新增成功，提示成功信息  
-                                    this.$message.success("新增成功");
+                                    this.$message.success("录入成功");
+                                    this.dialogFormVisible=false;
+                                     this.dialogFormVisible4Edit = false // 编辑窗体关闭
+                                    this.findPage();
                                 }else{
-                                    this.$message.error("新增失败")
+                                    this.$message.error("录入失败")
                                 }
-                    })
+                            })
                         }else{
                             this.$message.error({
                                 type: error,
@@ -302,7 +285,38 @@ export default {
                 //编辑，提交表单
                 handleEdit(ruleForm){
                     this.handleAdd(ruleForm);
+                    alert("666")
                 },
+                //点击删除
+                handleDelete(row){
+                    this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', 
+                    {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        //  ajax  请求 后台逻辑 删除  update   row.id
+                        //  this.findPage
+                        this.$http.delete("api/checkitem/delete"+row.id).then((res)=>{
+                            if(res.data.flag){
+                                    this.findPage();
+                                    //新增成功，提示成功信息  
+                                    this.$message.success("删除成功");
+                                }else{
+                                    this.$message.error("删除失败")
+                                }
+                        })   
+                        this.$message({
+                            type: 'success',
+                            message: '删除成功!'
+                        });
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消删除'
+                        });          
+                    });
+                }
 
             }
   
